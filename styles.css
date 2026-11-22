@@ -1,0 +1,975 @@
+/* ==========================================================================
+   Apple Music (Windows / WinUI 3 inspired) Theme & Synced Lyrics for YTM
+   Design tokens informed by Apple Music Windows (AMP.UI.Controls / AMP.UI.Views)
+   ========================================================================== */
+
+:root {
+  --am-accent: #fa2d48;
+  --am-accent-hover: #ff455e;
+  --am-surface-base: #1c1c1e;
+  --am-surface-sidebar: rgba(31, 31, 34, 0.82);
+  --am-surface-acrylic: rgba(34, 34, 38, 0.76);
+  --am-row-alt: rgba(255, 255, 255, 0.028);
+  --am-row-hover: rgba(255, 255, 255, 0.075);
+  --am-border-subtle: rgba(255, 255, 255, 0.09);
+  --am-border-strong: rgba(255, 255, 255, 0.16);
+  --am-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI Variable", "Segoe UI", sans-serif;
+  --am-artwork-url: none;
+  --am-mesh-c1: #fa2d48;
+  --am-mesh-c2: #6b21a8;
+  --am-mesh-c3: #1d4ed8;
+  --am-mesh-c4: #18181b;
+}
+
+/* Global Apple Music typography & dark canvas */
+html.am-theme-enabled,
+html.am-theme-enabled body,
+html.am-theme-enabled ytmusic-app,
+html.am-theme-enabled ytmusic-app-layout,
+html.am-theme-enabled #browse-page.ytmusic-app {
+  font-family: var(--am-font) !important;
+  background-color: var(--am-surface-base) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Top navigation bar (WinUI AcrylicHostBackdrop style) */
+html.am-theme-enabled ytmusic-nav-bar,
+html.am-theme-enabled #nav-bar-background.ytmusic-app-layout {
+  background: var(--am-surface-acrylic) !important;
+  backdrop-filter: blur(30px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+  border-bottom: 1px solid var(--am-border-subtle) !important;
+}
+
+/* Left sidebar (Apple Music Windows NavigationView) */
+html.am-theme-enabled #guide-wrapper.ytmusic-app,
+html.am-theme-enabled ytmusic-guide-renderer {
+  background: var(--am-surface-sidebar) !important;
+  backdrop-filter: blur(28px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(170%) !important;
+  border-right: 1px solid var(--am-border-subtle) !important;
+}
+
+html.am-theme-enabled ytmusic-guide-entry-renderer[active] tp-yt-paper-item {
+  background: rgba(250, 45, 72, 0.16) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+}
+
+html.am-theme-enabled ytmusic-guide-entry-renderer[active] yt-icon {
+  color: var(--am-accent) !important;
+}
+
+/* Alternating row background (AlternatingRowBackgroundBrush) on track lists */
+html.am-theme-enabled ytmusic-responsive-list-item-renderer {
+  border-radius: 8px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  transition: background 0.15s ease;
+}
+
+html.am-theme-enabled ytmusic-responsive-list-item-renderer:nth-child(even) {
+  background: var(--am-row-alt) !important;
+}
+
+html.am-theme-enabled ytmusic-responsive-list-item-renderer:hover {
+  background: var(--am-row-hover) !important;
+}
+
+/* Bottom Transport Bar (Apple Music Acrylic + LCD center pill) */
+html.am-theme-enabled ytmusic-player-bar {
+  background: var(--am-surface-acrylic) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+  border-top: 1px solid var(--am-border-subtle) !important;
+  box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.45) !important;
+}
+
+html.am-theme-enabled ytmusic-player-bar .middle-controls {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 4px 14px;
+  max-width: 520px;
+}
+
+html.am-theme-enabled #progress-bar.ytmusic-player-bar {
+  --paper-slider-active-color: var(--am-accent) !important;
+  --paper-slider-knob-color: #ffffff !important;
+  --paper-slider-knob-start-color: #ffffff !important;
+  --paper-slider-knob-start-border-color: #ffffff !important;
+}
+
+/* Rounded album artwork cards */
+html.am-theme-enabled ytmusic-player-bar img.image {
+  border-radius: 6px !important;
+}
+
+html.am-theme-enabled ytmusic-two-row-item-renderer img,
+html.am-theme-enabled ytmusic-responsive-list-item-renderer img {
+  border-radius: 10px !important;
+}
+
+/* Dynamic ambient backdrop on YTM player page */
+html.am-theme-enabled ytmusic-player-page::before {
+  content: "";
+  position: fixed;
+  inset: -15%;
+  background-image: var(--am-artwork-url);
+  background-size: cover;
+  background-position: center;
+  filter: blur(95px) saturate(210%) brightness(0.42);
+  transform: scale(1.15);
+  z-index: 0;
+  pointer-events: none;
+  transition: background-image 0.8s ease;
+}
+
+html.am-theme-enabled ytmusic-player-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   Cosmetic Ad & Promo Hiding (when Adblock is enabled)
+   ========================================================================== */
+
+html.am-adblock-enabled ytmusic-mealbar-promo-renderer,
+html.am-adblock-enabled ytmusic-statement-banner-renderer,
+html.am-adblock-enabled ytmusic-banner-promo-renderer,
+html.am-adblock-enabled ytmusic-promoted-sparkles-web-renderer,
+html.am-adblock-enabled ytd-ad-slot-renderer,
+html.am-adblock-enabled .ytp-ad-module,
+html.am-adblock-enabled .ytp-ad-overlay-container,
+html.am-adblock-enabled .ytp-ad-player-overlay,
+html.am-adblock-enabled .ytp-ad-image-overlay,
+html.am-adblock-enabled tp-yt-paper-dialog:has(ytmusic-mealbar-promo-renderer),
+html.am-adblock-enabled #player-ads {
+  display: none !important;
+}
+
+/* Lyrics toggle button injected into YTM Transport Bar */
+#am-lyrics-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  margin-right: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--am-border-strong);
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  font-family: var(--am-font);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease, border-color 0.18s ease;
+  user-select: none;
+}
+
+#am-lyrics-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+#am-lyrics-toggle-btn.active {
+  background: var(--am-accent);
+  border-color: var(--am-accent-hover);
+  color: #ffffff;
+}
+
+#am-lyrics-toggle-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+/* ==========================================================================
+   FullScreenPlayerView Overlay (ArtworkTransportColumn + LyricsColumn)
+   ========================================================================== */
+
+#am-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: var(--am-font);
+  background: #141416;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+#am-overlay.open {
+  display: flex;
+  opacity: 1;
+}
+
+/* Multi-layer Mesh Gradient (inspired by Apple Music MeshPixelShader.cso) */
+.am-bg-layer {
+  position: absolute;
+  inset: -20%;
+  background-image: var(--am-artwork-url);
+  background-size: cover;
+  background-position: center;
+  filter: blur(110px) saturate(230%) brightness(0.42);
+  transform: scale(1.22);
+  z-index: 0;
+  transition: background-image 0.9s ease;
+}
+
+.am-mesh-layer {
+  position: absolute;
+  inset: -25%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.65;
+  background:
+    radial-gradient(circle at 20% 25%, var(--am-mesh-c1), transparent 52%),
+    radial-gradient(circle at 80% 30%, var(--am-mesh-c2), transparent 55%),
+    radial-gradient(circle at 65% 80%, var(--am-mesh-c3), transparent 52%),
+    radial-gradient(circle at 25% 80%, var(--am-mesh-c4), transparent 55%);
+  filter: blur(80px) saturate(160%);
+  mix-blend-mode: screen;
+}
+
+html.am-animate-bg .am-bg-layer {
+  animation: am-drift 26s ease-in-out infinite alternate;
+}
+
+html.am-animate-bg .am-mesh-layer {
+  animation: am-mesh-flow 18s ease-in-out infinite alternate;
+}
+
+@keyframes am-drift {
+  0% { transform: scale(1.2) translate(0%, 0%) rotate(0deg); }
+  50% { transform: scale(1.32) translate(-3%, 2%) rotate(6deg); }
+  100% { transform: scale(1.22) translate(3%, -2%) rotate(-5deg); }
+}
+
+@keyframes am-mesh-flow {
+  0% { transform: scale(1.0) translate(0%, 0%) rotate(0deg); }
+  50% { transform: scale(1.16) translate(4%, -3%) rotate(10deg); }
+  100% { transform: scale(1.06) translate(-4%, 3%) rotate(-8deg); }
+}
+
+.am-bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 28% 50%, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.56));
+  z-index: 2;
+}
+
+/* Top bar */
+.am-topbar {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px 8px;
+}
+
+.am-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  letter-spacing: 0.01em;
+}
+
+.am-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--am-accent);
+  box-shadow: 0 0 12px var(--am-accent);
+}
+
+.am-top-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.am-pill-btn {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, transform 0.12s ease;
+}
+
+.am-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.am-pill-btn:active {
+  transform: scale(0.96);
+}
+
+/* Main two-column Apple Music FullScreenPlayerView */
+.am-main {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(320px, 43%) 1fr;
+  gap: 52px;
+  align-items: center;
+  padding: 12px 6vw 36px;
+}
+
+/* Left column: ArtworkTransportColumn */
+.am-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.am-artwork-wrap {
+  width: min(370px, 34vw);
+  height: min(370px, 34vw);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.12);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.am-artwork-wrap.paused {
+  transform: scale(0.84);
+}
+
+.am-artwork-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.am-meta {
+  width: min(370px, 34vw);
+  margin-top: 24px;
+  text-align: left;
+}
+
+.am-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.am-artist {
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.68);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Expandable Apple Music glass progress scrubber */
+.am-progress-wrap {
+  width: min(370px, 34vw);
+  margin-top: 18px;
+}
+
+.am-progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: height 0.15s ease;
+}
+
+.am-progress-bar:hover {
+  height: 9px;
+}
+
+.am-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  transition: width 0.08s linear;
+}
+
+.am-time-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.56);
+  margin-top: 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* TransportButtonsPanel */
+.am-controls {
+  width: min(370px, 34vw);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.am-ctrl-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+.am-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.am-ctrl-btn:active {
+  transform: scale(0.92);
+}
+
+.am-ctrl-btn.secondary svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  opacity: 0.72;
+}
+
+.am-ctrl-btn.secondary.active svg {
+  opacity: 1;
+  color: var(--am-accent);
+}
+
+.am-ctrl-btn svg {
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+}
+
+.am-ctrl-btn.play-btn svg {
+  width: 42px;
+  height: 42px;
+}
+
+/* Volume slider row */
+.am-volume-row {
+  width: min(370px, 34vw);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.am-volume-row svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.am-volume-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  outline: none;
+  cursor: pointer;
+}
+
+.am-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+/* Right column: LyricsColumn / LyricsHostView */
+.am-right {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.am-lyrics-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 36vh 18px 44vh 8px;
+  scroll-behavior: smooth;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 84%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 84%, transparent 100%);
+  scrollbar-width: none;
+}
+
+.am-lyrics-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* KaraokeLyricsLine */
+.am-lyric-line {
+  --am-line-progress: 0%;
+  font-size: clamp(24px, 2.55vw, 38px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+  color: rgba(255, 255, 255, 0.34);
+  margin: 0 0 26px 0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transform-origin: left center;
+  transform: scale(0.96);
+  filter: blur(1.6px);
+  transition:
+    color 0.3s ease,
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.32s ease,
+    background 0.2s ease;
+}
+
+.am-lyric-line.near {
+  filter: blur(0.8px);
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.am-lyric-line:hover {
+  filter: blur(0);
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.am-lyric-line.past {
+  color: rgba(255, 255, 255, 0.26);
+  filter: blur(1.8px);
+  transform: scale(0.95);
+}
+
+/* Active line with progressive karaoke sweep */
+.am-lyric-line.active {
+  filter: blur(0);
+  transform: scale(1.03);
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #ffffff var(--am-line-progress),
+    rgba(255, 255, 255, 0.42) calc(var(--am-line-progress) + 12%),
+    rgba(255, 255, 255, 0.42) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.am-lyric-line.plain {
+  filter: none;
+  color: rgba(255, 255, 255, 0.86);
+  cursor: default;
+  transform: none;
+  font-size: clamp(18px, 1.8vw, 24px);
+}
+
+/* Instrumental interlude pulsing dots (Apple Music signature) */
+.am-interlude {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 24px;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.am-interlude.visible {
+  opacity: 1;
+}
+
+.am-interlude span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  animation: am-dot-pulse 1.4s ease-in-out infinite;
+}
+
+.am-interlude span:nth-child(2) {
+  animation-delay: 0.22s;
+}
+
+.am-interlude span:nth-child(3) {
+  animation-delay: 0.44s;
+}
+
+@keyframes am-dot-pulse {
+  0%, 100% { transform: scale(0.75); opacity: 0.35; }
+  50% { transform: scale(1.18); opacity: 1; }
+}
+
+.am-lyrics-status {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.62);
+  padding: 12px;
+}
+
+/* Responsive layout for narrow windows */
+@media (max-width: 900px) {
+  .am-main {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 8px 24px 20px;
+  }
+
+  .am-artwork-wrap {
+    width: 136px;
+    height: 136px;
+  }
+
+  .am-meta,
+  .am-progress-wrap,
+  .am-controls,
+  .am-volume-row {
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+
+  .am-lyrics-scroll {
+    padding: 16vh 8px 24vh;
+  }
+}
+
+/* ==========================================================================
+   Spotify Appearance Override (html.am-style-spotify)
+   ========================================================================== */
+
+html.am-style-spotify {
+  --am-accent: #1db954;
+  --am-accent-hover: #1ed760;
+  --am-surface-base: #121212;
+  --am-surface-sidebar: #000000;
+  --am-surface-acrylic: #181818;
+  --am-row-alt: transparent;
+  --am-row-hover: rgba(255, 255, 255, 0.1);
+  --am-border-subtle: rgba(255, 255, 255, 0.06);
+  --am-border-strong: rgba(255, 255, 255, 0.18);
+  --am-font: "CircularSp", "Circular", "Montserrat", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html.am-theme-enabled.am-style-spotify ytmusic-nav-bar {
+  background: rgba(18, 18, 18, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+html.am-theme-enabled.am-style-spotify #guide-wrapper.ytmusic-app,
+html.am-theme-enabled.am-style-spotify ytmusic-guide-renderer {
+  background: #000000 !important;
+  backdrop-filter: none !important;
+}
+
+html.am-theme-enabled.am-style-spotify ytmusic-guide-entry-renderer[active] tp-yt-paper-item {
+  background: #282828 !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+}
+
+html.am-theme-enabled.am-style-spotify ytmusic-guide-entry-renderer[active] yt-icon {
+  color: #1db954 !important;
+}
+
+html.am-theme-enabled.am-style-spotify ytmusic-player-bar {
+  background: #181818 !important;
+  backdrop-filter: none !important;
+  border-top: 1px solid #282828 !important;
+}
+
+html.am-theme-enabled.am-style-spotify ytmusic-player-bar .middle-controls {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+html.am-theme-enabled.am-style-spotify ytmusic-player-bar img.image {
+  border-radius: 4px !important;
+}
+
+html.am-theme-enabled.am-style-spotify ytmusic-two-row-item-renderer img,
+html.am-theme-enabled.am-style-spotify ytmusic-responsive-list-item-renderer img {
+  border-radius: 6px !important;
+}
+
+/* Spotify Full-Screen Lyrics View: bold saturated backdrop, crisp unblurred lyrics, green Play button */
+html.am-style-spotify #am-overlay {
+  background: #121212;
+}
+
+html.am-style-spotify .am-bg-layer {
+  filter: blur(130px) saturate(185%) brightness(0.42);
+  animation: none !important;
+}
+
+html.am-style-spotify .am-mesh-layer {
+  opacity: 0.48;
+  filter: blur(100px) saturate(140%);
+  animation: none !important;
+}
+
+html.am-style-spotify .am-artwork-wrap {
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+}
+
+html.am-style-spotify .am-progress-fill {
+  background: #1db954;
+}
+
+html.am-style-spotify .am-ctrl-btn.play-btn {
+  background: #1db954;
+  color: #000000;
+  width: 56px;
+  height: 56px;
+}
+
+html.am-style-spotify .am-ctrl-btn.play-btn:hover {
+  background: #1ed760;
+  color: #000000;
+  transform: scale(1.06);
+}
+
+html.am-style-spotify .am-ctrl-btn.play-btn svg {
+  width: 30px;
+  height: 30px;
+}
+
+html.am-style-spotify .am-lyric-line {
+  filter: none;
+  transform: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+html.am-style-spotify .am-lyric-line.past {
+  filter: none;
+  transform: none;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+html.am-style-spotify .am-lyric-line.near {
+  filter: none;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+html.am-style-spotify .am-lyric-line.active {
+  filter: none;
+  transform: scale(1.015);
+  color: #ffffff;
+  background-image: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  text-shadow: none;
+}
+
+html.am-style-spotify .am-lyric-line:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   Mobile Navigation Back Button & Mobile Appearance Mode (html.am-layout-mobile)
+   ========================================================================== */
+
+.am-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.am-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(18px);
+  color: #ffffff;
+  font-family: var(--am-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, transform 0.12s ease;
+}
+
+.am-back-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.am-back-btn:active {
+  transform: scale(0.95);
+}
+
+.am-back-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.am-mobile-grabber {
+  display: none;
+  position: relative;
+  z-index: 5;
+  width: 42px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.36);
+  margin: 10px auto 0;
+  cursor: pointer;
+}
+
+/* Mobile sheet appearance (iOS Apple Music / Spotify Mobile Now Playing) */
+html.am-layout-mobile .am-mobile-grabber {
+  display: block;
+}
+
+html.am-layout-mobile #am-overlay {
+  align-items: center;
+}
+
+html.am-layout-mobile .am-topbar {
+  width: 100%;
+  max-width: 480px;
+  padding: 10px 18px 6px;
+}
+
+html.am-layout-mobile .am-badge,
+html.am-layout-mobile #am-fullscreen-btn,
+html.am-layout-mobile #am-close-btn {
+  display: none;
+}
+
+html.am-layout-mobile .am-main {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 20px 22px;
+}
+
+/* Compact mobile top track header (small artwork + title/artist) and bottom controls */
+html.am-layout-mobile .am-left {
+  display: contents;
+}
+
+html.am-layout-mobile .am-artwork-wrap {
+  order: 1;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  align-self: flex-start;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+html.am-layout-mobile .am-artwork-wrap.paused {
+  transform: scale(0.94);
+}
+
+html.am-layout-mobile .am-meta {
+  order: 2;
+  width: calc(100% - 78px);
+  margin-top: -66px;
+  margin-left: 78px;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+}
+
+html.am-layout-mobile .am-title {
+  font-size: 16.5px;
+}
+
+html.am-layout-mobile .am-artist {
+  font-size: 14px;
+}
+
+html.am-layout-mobile .am-right {
+  order: 3;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+html.am-layout-mobile .am-lyrics-scroll {
+  padding: 14vh 4px 22vh;
+}
+
+html.am-layout-mobile .am-lyric-line {
+  font-size: 24px;
+  margin-bottom: 18px;
+  padding: 4px 8px;
+}
+
+html.am-layout-mobile .am-progress-wrap {
+  order: 4;
+  width: 100%;
+  margin-top: 6px;
+}
+
+html.am-layout-mobile .am-controls {
+  order: 5;
+  width: 100%;
+  margin-top: 4px;
+}
+
+html.am-layout-mobile .am-volume-row {
+  order: 6;
+  width: 100%;
+  margin-top: 4px;
+}

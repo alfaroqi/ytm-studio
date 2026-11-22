@@ -1,0 +1,24 @@
+# Build outputs & packaged archives
+dist/
+*.zip
+*.xpi
+*.crx
+*.pem
+
+# Browser-generated metadata (created by Chrome when loading unpacked extensions)
+_metadata/
+
+# Node / Python caches
+node_modules/
+__pycache__/
+*.pyc
+*.log
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.tmp

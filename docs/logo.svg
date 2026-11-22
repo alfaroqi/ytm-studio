@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="8" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fa2d48"/>
+      <stop offset="52%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#1db954"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#bg)"/>
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#shine)"/>
+  <rect x="4.75" y="4.75" width="118.5" height="118.5" rx="27.25" stroke="#ffffff" stroke-opacity="0.22" stroke-width="1.5"/>
+  <!-- Double music note glyph -->
+  <path d="M51 82.5V41.5L88 34V74.5" stroke="#ffffff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M51 53L88 45.5" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-opacity="0.72"/>
+  <ellipse cx="43.5" cy="84" rx="11" ry="8.5" transform="rotate(-14 43.5 84)" fill="#ffffff"/>
+  <ellipse cx="80.5" cy="76" rx="11" ry="8.5" transform="rotate(-14 80.5 76)" fill="#ffffff"/>
+</svg>

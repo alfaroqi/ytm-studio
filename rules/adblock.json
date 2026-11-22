@@ -1,0 +1,76 @@
+[
+  {
+    "id": 1,
+    "priority": 10,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/pagead/",
+      "initiatorDomains": ["music.youtube.com", "youtube.com"]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 10,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/v1/player/ad_break",
+      "initiatorDomains": ["music.youtube.com", "youtube.com"]
+    }
+  },
+  {
+    "id": 3,
+    "priority": 10,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/api/stats/ads",
+      "initiatorDomains": ["music.youtube.com", "youtube.com"]
+    }
+  },
+  {
+    "id": 4,
+    "priority": 10,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/ptracking",
+      "initiatorDomains": ["music.youtube.com", "youtube.com"]
+    }
+  },
+  {
+    "id": 5,
+    "priority": 10,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/get_video_info?*adunit",
+      "initiatorDomains": ["music.youtube.com", "youtube.com"]
+    }
+  },
+  {
+    "id": 6,
+    "priority": 10,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||googlevideo.com/initplayback?source=youtube&*oad=",
+      "initiatorDomains": ["music.youtube.com", "youtube.com"],
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  },
+  {
+    "id": 7,
+    "priority": 10,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": ["doubleclick.net", "googlesyndication.com", "googleadservices.com"],
+      "initiatorDomains": ["music.youtube.com"]
+    }
+  },
+  {
+    "id": 8,
+    "priority": 10,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/v1/log_event",
+      "initiatorDomains": ["music.youtube.com"],
+      "resourceTypes": ["xmlhttprequest", "ping"]
+    }
+  }
+]
