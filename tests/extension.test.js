@@ -195,6 +195,51 @@ test("adblock-main.js prunes ad keys from /youtubei/v1/player responses and resp
   assert.deepEqual(fakeWindow.ytInitialPlayerResponse, { ok: true });
 });
 
+test("adblock-main.js bridges am-set-volume events to #movie_player and YTM volume slider", () => {
+  const listeners = {};
+  const playerCalls = [];
+  const sliderEvents = [];
+  const fakePlayer = {
+    setVolume: (v) => playerCalls.push(["setVolume", v]),
+    mute: () => playerCalls.push(["mute"]),
+    unMute: () => playerCalls.push(["unMute"]),
+    seekTo: (t, allow) => playerCalls.push(["seekTo", t, allow]),
+  };
+  const fakeSlider = {
+    value: 100,
+    dispatchEvent: (ev) => sliderEvents.push(ev.type),
+  };
+
+  loadScriptInSandbox("adblock-main.js", {
+    window: {
+      addEventListener: (type, fn) => {
+        listeners[type] = fn;
+      },
+    },
+    document: {
+      documentElement: { dataset: { amAdblock: "true" } },
+      querySelector: (sel) => (sel === "#movie_player" ? fakePlayer : null),
+      querySelectorAll: (sel) => (sel.includes("#volume-slider") ? [fakeSlider] : []),
+    },
+    Event,
+    CustomEvent,
+  });
+
+  assert.equal(typeof listeners["am-set-volume"], "function");
+
+  listeners["am-set-volume"]({ detail: { volume: 42 } });
+  assert.deepEqual(playerCalls, [["unMute"], ["setVolume", 42]]);
+  assert.equal(fakeSlider.value, 42);
+  assert.deepEqual(sliderEvents, ["change", "value-change"]);
+
+  listeners["am-set-volume"]({ detail: { volume: 0 } });
+  assert.deepEqual(playerCalls.slice(2), [["mute"], ["setVolume", 0]]);
+  assert.equal(fakeSlider.value, 0);
+
+  listeners["am-seek-to"]({ detail: { time: 75.5 } });
+  assert.deepEqual(playerCalls.slice(4), [["seekTo", 75.5, true]]);
+});
+
 // ============================================================================
 // 4. content.js — LRC Parser, Time Formatting, & Artwork Upgrading
 // ============================================================================
@@ -234,4 +279,137 @@ test("content.js parses synced LRC, multi-timestamps, enhanced word tags, and up
   assert.deepEqual(parsed[1], { time: 8.0, text: "♪" });
   assert.deepEqual(parsed[2], { time: 12.5, text: "Second line" });
   assert.deepEqual(parsed[3], { time: 60.0, text: "First chorus" });
+});
+
+// ============================================================================
+// 5. background.js — CJK Detection, Local Romanizers, & Online Batch Romanize
+// ============================================================================
+
+test("background.js detects JP/KR/CN languages and romanizes Kana & Hangul locally", () => {
+  const ctx = loadScriptInSandbox("background.js", {
+    chrome: {
+      runtime: { onMessage: { addListener: () => {} } },
+      storage: { local: { get: () => {} }, onChanged: { addListener: () => {} } },
+    },
+    fetch: async () => ({ ok: false }),
+  });
+
+  // Language detection
+  assert.equal(ctx.detectCjkLanguage(["Hello world", "Sing along"]), null);
+  assert.equal(ctx.detectCjkLanguage(["夜に駆ける", "沈むように"]), "ja");
+  assert.equal(ctx.detectCjkLanguage(["사랑해", "너를 좋아해"]), "ko");
+  assert.equal(ctx.detectCjkLanguage(["月亮代表我的心", "你问我爱你有多深"]), "zh-CN");
+
+  // Local Hangul romanization (including liaison before ㅇ)
+  assert.equal(ctx.romanizeHangulLocal("사랑해"), "saranghae");
+  assert.equal(ctx.romanizeHangulLocal("한국어"), "hangugeo");
+
+  // Local Kana Hepburn romanization (hiragana, katakana, digraphs, sokuon, chouonpu)
+  assert.equal(ctx.romanizeKanaLocal("ありがとう"), "arigatou");
+  assert.equal(ctx.romanizeKanaLocal("カフェ"), "kafe");
+  assert.equal(ctx.romanizeKanaLocal("きゃっ"), "kya");
+  assert.equal(ctx.romanizeKanaLocal("きっと"), "kitto");
+  assert.equal(ctx.romanizeKanaLocal("ラーメン"), "raamen");
+});
+
+test("background.js romanizeLines batches online requests, skips English, deduplicates, and falls back offline", async () => {
+  let fetchCalls = 0;
+  let online = true;
+  const ctx = loadScriptInSandbox("background.js", {
+    chrome: {
+      runtime: { onMessage: { addListener: () => {} } },
+      storage: { local: { get: () => {} }, onChanged: { addListener: () => {} } },
+    },
+    fetch: async (url) => {
+      fetchCalls++;
+      if (!online) throw new Error("network down");
+      assert.ok(url.includes("translate.googleapis.com/translate_a/single"));
+      assert.ok(url.includes("dt=rm"));
+      const rawQ = new URL(url).searchParams.get("q") || "";
+      const map = {
+        "夜に駆ける": "Yoru ni kakeru",
+        "沈むように": "Shizumu you ni",
+        "月亮代表我的心": "Yuèliàng dàibiǎo wǒ de xīn",
+      };
+      const out = rawQ
+        .split("\n")
+        .map((line) => map[line] || line)
+        .join("\n");
+      return {
+        ok: true,
+        json: async () => [[[null, null, null, out]]],
+      };
+    },
+  });
+
+  // Japanese song with repeated chorus + English line
+  const jpRes = plain(
+    await ctx.romanizeLines(["夜に駆ける", "Let's go", "沈むように", "夜に駆ける"])
+  );
+  assert.equal(jpRes.language, "ja");
+  assert.deepEqual(jpRes.romaji, ["Yoru ni kakeru", "", "Shizumu you ni", "Yoru ni kakeru"]);
+  assert.equal(fetchCalls, 1);
+
+  // Cached lines should not trigger another fetch
+  const jpCached = plain(await ctx.romanizeLines(["夜に駆ける"]));
+  assert.deepEqual(jpCached.romaji, ["Yoru ni kakeru"]);
+  assert.equal(fetchCalls, 1);
+
+  // Chinese song -> Pinyin
+  const cnRes = plain(await ctx.romanizeLines(["月亮代表我的心"]));
+  assert.equal(cnRes.language, "zh-CN");
+  assert.deepEqual(cnRes.romaji, ["Yuèliàng dàibiǎo wǒ de xīn"]);
+
+  // Offline fallback for Korean Hangul
+  online = false;
+  const koOffline = plain(await ctx.romanizeLines(["사랑해", "Baby"]));
+  assert.equal(koOffline.language, "ko");
+  assert.deepEqual(koOffline.romaji, ["saranghae", ""]);
+});
+
+test("background.js translateLines batches English translations, deduplicates, caches, and skips unchanged lines", async () => {
+  let fetchCalls = 0;
+  const ctx = loadScriptInSandbox("background.js", {
+    chrome: {
+      runtime: { onMessage: { addListener: () => {} } },
+      storage: { local: { get: () => {} }, onChanged: { addListener: () => {} } },
+    },
+    fetch: async (url) => {
+      fetchCalls++;
+      assert.ok(url.includes("translate.googleapis.com/translate_a/single"));
+      assert.ok(url.includes("dt=t"));
+      const rawQ = new URL(url).searchParams.get("q") || "";
+      const map = {
+        "夜に駆ける": "Racing into the Night",
+        "사랑해": "I love you",
+        "Hello": "Hello",
+      };
+      const segments = rawQ.split("\n").map((line, i, arr) => [
+        (map[line] || line) + (i < arr.length - 1 ? "\n" : ""),
+        line,
+      ]);
+      return {
+        ok: true,
+        json: async () => [segments],
+      };
+    },
+  });
+
+  const res = plain(
+    await ctx.translateLines(["夜に駆ける", "♪", "Hello", "사랑해", "夜に駆ける"], "en")
+  );
+  assert.equal(res.targetLang, "en");
+  assert.deepEqual(res.translations, [
+    "Racing into the Night",
+    "",
+    "",
+    "I love you",
+    "Racing into the Night",
+  ]);
+  assert.equal(fetchCalls, 1);
+
+  // Cached lines should not trigger another fetch
+  const cached = plain(await ctx.translateLines(["사랑해"], "en"));
+  assert.deepEqual(cached.translations, ["I love you"]);
+  assert.equal(fetchCalls, 1);
 });

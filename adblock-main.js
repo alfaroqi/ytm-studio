@@ -80,4 +80,55 @@
   } catch (_) {
     // Ignore if already non-configurable
   }
+
+  // 3. Bridge volume changes from the isolated lyrics overlay to YTM's #movie_player & slider
+  if (typeof window.addEventListener === "function") {
+    window.addEventListener("am-set-volume", (e) => {
+      const detail = e && e.detail;
+      if (!detail || typeof detail.volume !== "number") return;
+      const vol = Math.max(0, Math.min(100, Math.round(detail.volume)));
+
+      const player = document.querySelector("#movie_player");
+      if (player) {
+        try {
+          if (vol === 0) {
+            if (typeof player.mute === "function") player.mute();
+            if (typeof player.setVolume === "function") player.setVolume(0);
+          } else {
+            if (typeof player.unMute === "function") player.unMute();
+            if (typeof player.setVolume === "function") player.setVolume(vol);
+          }
+        } catch (_) {
+          // Ignore player API errors
+        }
+      }
+
+      const sliders = document.querySelectorAll(
+        "ytmusic-player-bar #volume-slider, ytmusic-player-bar #expand-volume-slider"
+      );
+      sliders.forEach((ytmSlider) => {
+        try {
+          ytmSlider.value = vol;
+          ytmSlider.dispatchEvent(new Event("change", { bubbles: true }));
+          ytmSlider.dispatchEvent(new CustomEvent("value-change", { bubbles: true }));
+        } catch (_) {
+          // Ignore slider sync errors
+        }
+      });
+    });
+
+    window.addEventListener("am-seek-to", (e) => {
+      const detail = e && e.detail;
+      if (!detail || typeof detail.time !== "number" || !Number.isFinite(detail.time)) return;
+      const targetTime = Math.max(0, detail.time);
+      const player = document.querySelector("#movie_player");
+      if (player && typeof player.seekTo === "function") {
+        try {
+          player.seekTo(targetTime, true);
+        } catch (_) {
+          // Ignore player API errors
+        }
+      }
+    });
+  }
 })();

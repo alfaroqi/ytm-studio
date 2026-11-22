@@ -1,6 +1,6 @@
 const api = typeof browser !== "undefined" ? browser : chrome;
 
-const checkboxIds = ["themeEnabled", "animateBg", "showLyricsBtn", "adblockEnabled"];
+const checkboxIds = ["themeEnabled", "animateBg", "showLyricsBtn", "showRomaji", "showTranslation", "adblockEnabled"];
 const styleSelect = document.getElementById("themeStyle");
 const layoutSelect = document.getElementById("layoutMode");
 const brandDot = document.getElementById("brandDot");
@@ -51,6 +51,8 @@ api.storage.local.get(
     layoutMode: "desktop",
     animateBg: true,
     showLyricsBtn: true,
+    showRomaji: true,
+    showTranslation: false,
     adblockEnabled: true,
   },
   (items) => {

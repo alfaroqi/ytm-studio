@@ -9,7 +9,8 @@
   ],
   "host_permissions": [
     "https://music.youtube.com/*",
-    "https://lrclib.net/*"
+    "https://lrclib.net/*",
+    "https://translate.googleapis.com/*"
   ],
   "declarative_net_request": {
     "rule_resources": [
