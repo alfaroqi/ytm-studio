@@ -9,6 +9,7 @@
   ],
   "host_permissions": [
     "https://music.youtube.com/*",
+    "https://www.youtube.com/*",
     "https://lrclib.net/*",
     "https://translate.googleapis.com/*"
   ],
@@ -26,10 +27,19 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://music.youtube.com/*"],
+      "matches": [
+        "https://music.youtube.com/*",
+        "https://www.youtube.com/*"
+      ],
       "js": ["adblock-main.js"],
       "run_at": "document_start",
       "world": "MAIN"
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "css": ["adblock-yt.css"],
+      "js": ["adblock-yt.js"],
+      "run_at": "document_start"
     },
     {
       "matches": ["https://music.youtube.com/*"],

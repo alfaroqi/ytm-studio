@@ -77,10 +77,10 @@ test("background.js cleanTitle & cleanArtist normalize YouTube Music metadata", 
   const dnrCalls = [];
   const ctx = loadScriptInSandbox("background.js", {
     chrome: {
-      runtime: { onMessage: { addListener: () => {} } },
+      runtime: { onMessage: { addListener: () => { } } },
       storage: {
         local: { get: (_d, cb) => cb({ adblockEnabled: true }) },
-        onChanged: { addListener: () => {} },
+        onChanged: { addListener: () => { } },
       },
       declarativeNetRequest: {
         updateEnabledRulesets: (u) => {
@@ -108,8 +108,8 @@ test("background.js fetchFromLrcLib returns exact match and falls back to best s
   let mode = "exact";
   const ctx = loadScriptInSandbox("background.js", {
     chrome: {
-      runtime: { onMessage: { addListener: () => {} } },
-      storage: { local: { get: () => {} }, onChanged: { addListener: () => {} } },
+      runtime: { onMessage: { addListener: () => { } } },
+      storage: { local: { get: () => { } }, onChanged: { addListener: () => { } } },
     },
     fetch: async (url) => {
       if (mode === "exact" && url.includes("/api/get")) {
@@ -195,6 +195,130 @@ test("adblock-main.js prunes ad keys from /youtubei/v1/player responses and resp
   assert.deepEqual(fakeWindow.ytInitialPlayerResponse, { ok: true });
 });
 
+test("adblock-main.js prunes ad keys from XMLHttpRequest /youtubei/v1/player responses", () => {
+  const docEl = { dataset: { amAdblock: "true" } };
+  class FakeXHR {
+    open(method, url) {
+      this._method = method;
+      this._url = url;
+    }
+    get responseText() {
+      return this._rawText;
+    }
+    get response() {
+      return this._rawResponse;
+    }
+  }
+
+  const fakeWindow = { XMLHttpRequest: FakeXHR };
+  loadScriptInSandbox("adblock-main.js", {
+    window: fakeWindow,
+    document: { documentElement: docEl },
+  });
+
+  const xhr = new FakeXHR();
+  xhr.open("POST", "https://www.youtube.com/youtubei/v1/player?prettyPrint=false");
+  xhr._rawText = JSON.stringify([
+    {
+      playerResponse: {
+        videoDetails: { title: "YT Video" },
+        adPlacements: [{ id: 1 }],
+        playerAds: [{ id: 2 }],
+        adSlots: [{ id: 3 }],
+      },
+    },
+  ]);
+  xhr._rawResponse = xhr._rawText;
+
+  const parsed = JSON.parse(xhr.responseText);
+  assert.equal(parsed[0].playerResponse.videoDetails.title, "YT Video");
+  assert.equal("adPlacements" in parsed[0].playerResponse, false);
+  assert.equal("playerAds" in parsed[0].playerResponse, false);
+  assert.equal("adSlots" in parsed[0].playerResponse, false);
+
+  // Disabled: response remains untouched
+  docEl.dataset.amAdblock = "false";
+  const unpruned = JSON.parse(xhr.responseText);
+  assert.ok(Array.isArray(unpruned[0].playerResponse.adPlacements));
+});
+
+test("adblock-yt.js auto-skips ads on www.youtube.com SPA navigation and restores mute/speed", () => {
+  const classes = new Set();
+  const docEl = {
+    dataset: {},
+    classList: {
+      toggle: (cls, force) => (force ? classes.add(cls) : classes.delete(cls)),
+    },
+  };
+  const playerClasses = new Set(["ad-showing"]);
+  const fakePlayer = {
+    classList: { contains: (cls) => playerClasses.has(cls) },
+  };
+  let playCalls = 0;
+  const fakeVideo = {
+    muted: false,
+    paused: true,
+    duration: 30,
+    currentTime: 0,
+    playbackRate: 1,
+    play: () => {
+      playCalls++;
+      return Promise.resolve();
+    },
+  };
+  let skipClicks = 0;
+  const fakeSkipBtn = { click: () => { skipClicks++; } };
+  const winListeners = {};
+  let msgListener = null;
+
+  loadScriptInSandbox("adblock-yt.js", {
+    window: {
+      addEventListener: (type, fn) => {
+        winListeners[type] = fn;
+      },
+    },
+    document: {
+      documentElement: docEl,
+      querySelector: (sel) => {
+        if (sel === "#movie_player") return fakePlayer;
+        if (sel.includes("video")) return fakeVideo;
+        if (sel === ".ytp-skip-ad-button") return fakeSkipBtn;
+        return null;
+      },
+    },
+    chrome: {
+      runtime: {
+        id: "test-ext",
+        onMessage: { addListener: (fn) => { msgListener = fn; } },
+      },
+      storage: {
+        local: { get: (_d, cb) => cb({ adblockEnabled: true }) },
+        onChanged: { addListener: () => {} },
+      },
+    },
+    setInterval: () => 1,
+  });
+
+  assert.equal(docEl.dataset.amAdblock, "true");
+  assert.equal(classes.has("am-adblock-enabled"), true);
+  assert.equal(fakeVideo.muted, true);
+  assert.equal(fakeVideo.currentTime, 30);
+  assert.equal(fakeVideo.playbackRate, 16);
+  assert.equal(playCalls, 1);
+  assert.equal(skipClicks, 1);
+
+  // Ad finishes -> restores original mute state and playback rate
+  playerClasses.delete("ad-showing");
+  winListeners["yt-navigate-finish"]();
+  assert.equal(fakeVideo.muted, false);
+  assert.equal(fakeVideo.playbackRate, 1);
+
+  // Popup toggle disables adblock cleanly
+  msgListener({ type: "APPLY_SETTINGS", patch: { adblockEnabled: false } }, {}, () => {});
+  assert.equal(docEl.dataset.amAdblock, "false");
+  assert.equal(classes.has("am-adblock-enabled"), false);
+});
+
 test("adblock-main.js bridges am-set-volume events to #movie_player and YTM volume slider", () => {
   const listeners = {};
   const playerCalls = [];
@@ -204,6 +328,8 @@ test("adblock-main.js bridges am-set-volume events to #movie_player and YTM volu
     mute: () => playerCalls.push(["mute"]),
     unMute: () => playerCalls.push(["unMute"]),
     seekTo: (t, allow) => playerCalls.push(["seekTo", t, allow]),
+    pauseVideo: () => playerCalls.push(["pauseVideo"]),
+    playVideo: () => playerCalls.push(["playVideo"]),
   };
   const fakeSlider = {
     value: 100,
@@ -238,6 +364,152 @@ test("adblock-main.js bridges am-set-volume events to #movie_player and YTM volu
 
   listeners["am-seek-to"]({ detail: { time: 75.5 } });
   assert.deepEqual(playerCalls.slice(4), [["seekTo", 75.5, true]]);
+
+  listeners["am-set-playback"]({ detail: { action: "pause" } });
+  listeners["am-set-playback"]({ detail: { action: "play" } });
+  assert.deepEqual(playerCalls.slice(5), [["pauseVideo"], ["playVideo"]]);
+});
+
+test("adblock-main.js bridges am-get-track from MediaSession and #movie_player.getVideoData", () => {
+  const listeners = {};
+  const dispatched = [];
+  let mediaMeta = {
+    title: "Track From MediaSession",
+    artist: "MS Artist",
+    album: "MS Album",
+    artwork: [{ src: "https://example.com/small.jpg" }, { src: "https://example.com/large.jpg" }],
+  };
+  const fakePlayer = {
+    getVideoData: () => ({
+      title: "Track From Player",
+      author: "Player Artist",
+      video_id: "n1udh_flRQU",
+    }),
+  };
+
+  loadScriptInSandbox("adblock-main.js", {
+    window: {
+      addEventListener: (type, fn) => {
+        listeners[type] = fn;
+      },
+      dispatchEvent: (ev) => {
+        dispatched.push(ev);
+      },
+    },
+    navigator: {
+      mediaSession: {
+        get metadata() {
+          return mediaMeta;
+        },
+      },
+    },
+    document: {
+      documentElement: { dataset: { amAdblock: "true" } },
+      querySelector: (sel) => (sel === "#movie_player" ? fakePlayer : null),
+      querySelectorAll: () => [],
+    },
+    Event,
+    CustomEvent,
+  });
+
+  // 1. MediaSession metadata takes priority
+  listeners["am-get-track"]();
+  assert.equal(dispatched.length, 1);
+  assert.equal(dispatched[0].type, "am-track-info");
+  assert.deepEqual(JSON.parse(dispatched[0].detail), {
+    title: "Track From MediaSession",
+    artist: "MS Artist",
+    album: "MS Album",
+    artwork: "https://example.com/large.jpg",
+  });
+
+  // 2. Falls back to #movie_player.getVideoData when MediaSession is unavailable
+  mediaMeta = null;
+  listeners["am-get-track"]();
+  assert.equal(dispatched.length, 2);
+  assert.deepEqual(JSON.parse(dispatched[1].detail), {
+    title: "Track From Player",
+    artist: "Player Artist",
+    album: "",
+    artwork: "https://i.ytimg.com/vi/n1udh_flRQU/hqdefault.jpg",
+  });
+});
+
+test("content.js readCurrentTrack falls back to broader DOM, MediaSession, and MAIN-world bridge", () => {
+  const src = fs.readFileSync(path.join(EXT_DIR, "content.js"), "utf8");
+  const upgradeMatch = src.match(/function upgradeArtworkUrl[\s\S]*?\n  \}/);
+  const videoMatch = src.match(/function getVideo[\s\S]*?\n  \}/);
+  const readMatch = src.match(/function readMainWorldTrack[\s\S]*?return \{ title, artist, album, artwork, duration \};\s*\}/);
+  assert.ok(upgradeMatch && videoMatch && readMatch, "Could not locate readCurrentTrack helpers");
+
+  const code = `${upgradeMatch[0]}\n${videoMatch[0]}\n${readMatch[0]}`;
+
+  // Case 1: Altered player bar DOM (e.g. A/B test or another extension changed class names)
+  const alteredBar = {
+    querySelector: (sel) => {
+      if (sel === "yt-formatted-string.title") return { textContent: "Night Dancer" };
+      if (sel === ".content-info-wrapper .subtitle") return { textContent: "imase • 2022" };
+      if (sel === ".thumbnail-image-wrapper img") {
+        return { src: "https://lh3.googleusercontent.com/x=w60-h60-l90-rj" };
+      }
+      return null;
+    },
+  };
+  const ctx1 = vm.createContext({
+    document: {
+      querySelector: (sel) =>
+        sel === "ytmusic-player-bar" ? alteredBar : sel.includes("video") ? { duration: 210 } : null,
+    },
+    navigator: {},
+    window: { addEventListener: () => { }, removeEventListener: () => { }, dispatchEvent: () => { } },
+    CustomEvent,
+  });
+  vm.runInContext(code, ctx1);
+  assert.deepEqual(plain(ctx1.readCurrentTrack()), {
+    title: "Night Dancer",
+    artist: "imase",
+    album: "",
+    artwork: "https://lh3.googleusercontent.com/x=w600-h600-l90-rj",
+    duration: 210,
+  });
+
+  // Case 2: Player bar missing/empty -> falls back to MAIN-world bridge
+  const listeners = {};
+  const ctx2 = vm.createContext({
+    document: {
+      querySelector: (sel) => (sel.includes("video") ? { duration: 185 } : null),
+    },
+    navigator: {},
+    window: {
+      addEventListener: (type, fn) => {
+        listeners[type] = fn;
+      },
+      removeEventListener: (type) => {
+        delete listeners[type];
+      },
+      dispatchEvent: (ev) => {
+        if (ev.type === "am-get-track" && listeners["am-track-info"]) {
+          listeners["am-track-info"]({
+            detail: JSON.stringify({
+              title: "Fallback Song",
+              artist: "Fallback Artist",
+              album: "Fallback Album",
+              artwork: "https://i.ytimg.com/vi/n1udh_flRQU/hqdefault.jpg",
+            }),
+          });
+        }
+      },
+    },
+    CustomEvent,
+  });
+  vm.runInContext(code, ctx2);
+  assert.deepEqual(plain(ctx2.readCurrentTrack()), {
+    title: "Fallback Song",
+    artist: "Fallback Artist",
+    album: "Fallback Album",
+    artwork: "https://i.ytimg.com/vi/n1udh_flRQU/hqdefault.jpg",
+    duration: 185,
+  });
 });
 
 // ============================================================================
@@ -288,8 +560,8 @@ test("content.js parses synced LRC, multi-timestamps, enhanced word tags, and up
 test("background.js detects JP/KR/CN languages and romanizes Kana & Hangul locally", () => {
   const ctx = loadScriptInSandbox("background.js", {
     chrome: {
-      runtime: { onMessage: { addListener: () => {} } },
-      storage: { local: { get: () => {} }, onChanged: { addListener: () => {} } },
+      runtime: { onMessage: { addListener: () => { } } },
+      storage: { local: { get: () => { } }, onChanged: { addListener: () => { } } },
     },
     fetch: async () => ({ ok: false }),
   });
@@ -317,8 +589,8 @@ test("background.js romanizeLines batches online requests, skips English, dedupl
   let online = true;
   const ctx = loadScriptInSandbox("background.js", {
     chrome: {
-      runtime: { onMessage: { addListener: () => {} } },
-      storage: { local: { get: () => {} }, onChanged: { addListener: () => {} } },
+      runtime: { onMessage: { addListener: () => { } } },
+      storage: { local: { get: () => { } }, onChanged: { addListener: () => { } } },
     },
     fetch: async (url) => {
       fetchCalls++;
@@ -371,8 +643,8 @@ test("background.js translateLines batches English translations, deduplicates, c
   let fetchCalls = 0;
   const ctx = loadScriptInSandbox("background.js", {
     chrome: {
-      runtime: { onMessage: { addListener: () => {} } },
-      storage: { local: { get: () => {} }, onChanged: { addListener: () => {} } },
+      runtime: { onMessage: { addListener: () => { } } },
+      storage: { local: { get: () => { } }, onChanged: { addListener: () => { } } },
     },
     fetch: async (url) => {
       fetchCalls++;

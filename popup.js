@@ -20,12 +20,12 @@ function showReloadNotice(show) {
   if (syncNotice) syncNotice.style.display = show ? "block" : "none";
 }
 
-// Push updated settings directly to all open YouTube Music tabs for instant application
+// Push updated settings directly to all open YouTube Music & YouTube tabs for instant application
 function broadcastPatch(patch) {
   api.storage.local.set(patch);
   if (!api.tabs || !api.tabs.query) return;
 
-  api.tabs.query({ url: "https://music.youtube.com/*" }, (tabs) => {
+  api.tabs.query({ url: ["https://music.youtube.com/*", "https://www.youtube.com/*"] }, (tabs) => {
     if (!tabs || tabs.length === 0) return;
     let anyFailed = false;
     let pending = tabs.length;
@@ -33,7 +33,9 @@ function broadcastPatch(patch) {
     for (const tab of tabs) {
       api.tabs.sendMessage(tab.id, { type: "APPLY_SETTINGS", patch }, () => {
         if (chrome.runtime && chrome.runtime.lastError) {
-          anyFailed = true;
+          if (tab.url && tab.url.startsWith("https://music.youtube.com/")) {
+            anyFailed = true;
+          }
         }
         pending -= 1;
         if (pending === 0) {

@@ -26,6 +26,7 @@ fi
 if command -v node >/dev/null 2>&1; then
   echo "[1/4] Checking JavaScript syntax & running unit tests..."
   node --check adblock-main.js
+  node --check adblock-yt.js
   node --check background.js
   node --check content.js
   node --check popup.js
@@ -43,6 +44,8 @@ mkdir -p "$STAGE_DIR/chrome" "$STAGE_DIR/firefox"
 
 FILES=(
   "adblock-main.js"
+  "adblock-yt.js"
+  "adblock-yt.css"
   "background.js"
   "content.js"
   "popup.html"
