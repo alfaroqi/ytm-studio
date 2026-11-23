@@ -25,10 +25,12 @@ fi
 # Optional JS syntax validation & unit tests if Node.js is installed
 if command -v node >/dev/null 2>&1; then
   echo "[1/4] Checking JavaScript syntax & running unit tests..."
-  node --check adblock-main.js
-  node --check background.js
-  node --check content.js
-  node --check popup.js
+  node --check src/adblock/main.js
+  node --check src/adblock/content.js
+  node --check src/ytm/bridge-main.js
+  node --check src/ytm/content.js
+  node --check src/background/background.js
+  node --check src/popup/popup.js
   if [ -f "tests/extension.test.js" ]; then
     node --test tests/extension.test.js
   fi
@@ -41,20 +43,9 @@ echo "[2/4] Preparing dist/ for version v${VERSION}..."
 rm -rf "$DIST_DIR"
 mkdir -p "$STAGE_DIR/chrome" "$STAGE_DIR/firefox"
 
-FILES=(
-  "adblock-main.js"
-  "background.js"
-  "content.js"
-  "popup.html"
-  "popup.js"
-  "styles.css"
-)
-
 copy_assets() {
   local target="$1"
-  for f in "${FILES[@]}"; do
-    cp "$f" "$target/"
-  done
+  cp -r src "$target/src"
   cp -r icons "$target/icons"
   cp -r rules "$target/rules"
 }
@@ -82,7 +73,7 @@ with open(os.path.join(stage, "chrome", "manifest.json"), "w", encoding="utf-8")
 
 # Firefox MV3 manifest (injects background.scripts + gecko settings)
 firefox_manifest = json.loads(json.dumps(base))
-firefox_manifest["background"] = {"scripts": ["background.js"]}
+firefox_manifest["background"] = {"scripts": ["src/background/background.js"]}
 firefox_manifest["browser_specific_settings"] = {
     "gecko": {
         "id": "ytm-studio@local.dev",

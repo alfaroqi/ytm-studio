@@ -60,7 +60,7 @@
     "action": { "type": "block" },
     "condition": {
       "requestDomains": ["doubleclick.net", "googlesyndication.com", "googleadservices.com"],
-      "initiatorDomains": ["music.youtube.com"]
+      "initiatorDomains": ["music.youtube.com", "youtube.com"]
     }
   },
   {
@@ -69,7 +69,7 @@
     "action": { "type": "block" },
     "condition": {
       "urlFilter": "||youtube.com/youtubei/v1/log_event",
-      "initiatorDomains": ["music.youtube.com"],
+      "initiatorDomains": ["music.youtube.com", "youtube.com"],
       "resourceTypes": ["xmlhttprequest", "ping"]
     }
   }

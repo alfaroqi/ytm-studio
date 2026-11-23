@@ -130,31 +130,13 @@ html.am-theme-enabled ytmusic-player-page > * {
   z-index: 1;
 }
 
-/* ==========================================================================
-   Cosmetic Ad & Promo Hiding (when Adblock is enabled)
-   ========================================================================== */
-
-html.am-adblock-enabled ytmusic-mealbar-promo-renderer,
-html.am-adblock-enabled ytmusic-statement-banner-renderer,
-html.am-adblock-enabled ytmusic-banner-promo-renderer,
-html.am-adblock-enabled ytmusic-promoted-sparkles-web-renderer,
-html.am-adblock-enabled ytd-ad-slot-renderer,
-html.am-adblock-enabled .ytp-ad-module,
-html.am-adblock-enabled .ytp-ad-overlay-container,
-html.am-adblock-enabled .ytp-ad-player-overlay,
-html.am-adblock-enabled .ytp-ad-image-overlay,
-html.am-adblock-enabled tp-yt-paper-dialog:has(ytmusic-mealbar-promo-renderer),
-html.am-adblock-enabled #player-ads {
-  display: none !important;
-}
-
 /* Lyrics toggle button injected into YTM Transport Bar */
 #am-lyrics-toggle-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 13px;
-  margin-right: 10px;
+  margin: 0 8px;
   border-radius: 8px;
   border: 1px solid var(--am-border-strong);
   background: rgba(255, 255, 255, 0.09);
@@ -343,8 +325,8 @@ html.am-animate-bg .am-mesh-layer {
 }
 
 .am-artwork-wrap {
-  width: min(370px, 34vw);
-  height: min(370px, 34vw);
+  width: min(350px, 32vw, 42vh);
+  height: min(350px, 32vw, 42vh);
   border-radius: 14px;
   overflow: hidden;
   box-shadow:
@@ -395,7 +377,16 @@ html.am-animate-bg .am-mesh-layer {
 /* Expandable Apple Music glass progress scrubber */
 .am-progress-wrap {
   width: min(370px, 34vw);
-  margin-top: 18px;
+  margin-top: 12px;
+}
+
+.am-progress-hit {
+  padding: 9px 0;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
 }
 
 .am-progress-bar {
@@ -403,13 +394,13 @@ html.am-animate-bg .am-mesh-layer {
   height: 6px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.22);
-  cursor: pointer;
   position: relative;
   overflow: hidden;
   transition: height 0.15s ease;
 }
 
-.am-progress-bar:hover {
+.am-progress-hit:hover .am-progress-bar,
+.am-progress-hit.dragging .am-progress-bar {
   height: 9px;
 }
 
@@ -418,7 +409,7 @@ html.am-animate-bg .am-mesh-layer {
   width: 0%;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 999px;
-  transition: width 0.08s linear;
+  transition: width 0.06s linear;
 }
 
 .am-time-row {
@@ -427,7 +418,7 @@ html.am-animate-bg .am-mesh-layer {
   font-size: 11.5px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.56);
-  margin-top: 7px;
+  margin-top: 1px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -496,6 +487,128 @@ html.am-animate-bg .am-mesh-layer {
   color: rgba(255, 255, 255, 0.65);
 }
 
+.am-vol-icon-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: color 0.14s ease, background 0.14s ease, transform 0.12s ease;
+}
+
+.am-vol-icon-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.am-vol-icon-btn:active {
+  transform: scale(0.9);
+}
+
+/* Vertical volume popover anchored above the speaker icon */
+.am-vol-popover-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.am-vol-popover {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px 10px;
+  border-radius: 14px;
+  background: rgba(28, 28, 32, 0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  transition: opacity 0.16s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.am-vol-popover.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.am-vol-popover-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.am-vol-vbar-wrap {
+  padding: 0 10px;
+  height: 124px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.am-vol-vbar-track {
+  width: 7px;
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: width 0.14s ease;
+}
+
+.am-vol-vbar-wrap:hover .am-vol-vbar-track,
+.am-vol-vbar-wrap.dragging .am-vol-vbar-track {
+  width: 10px;
+}
+
+.am-vol-vbar-fill {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 999px;
+  transition: height 0.05s linear;
+}
+
+.am-vol-popover-mute {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.am-vol-popover-mute:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
 .am-volume-row svg {
   width: 16px;
   height: 16px;
@@ -503,26 +616,46 @@ html.am-animate-bg .am-mesh-layer {
   flex-shrink: 0;
 }
 
-.am-volume-slider {
+.am-volume-bar-wrap {
   flex: 1;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.24);
-  outline: none;
+  padding: 9px 0;
   cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
 }
 
-.am-volume-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
-  cursor: pointer;
+.am-volume-bar-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  overflow: hidden;
+  transition: height 0.14s ease;
+}
+
+.am-volume-bar-wrap:hover .am-volume-bar-track,
+.am-volume-bar-wrap.dragging .am-volume-bar-track {
+  height: 9px;
+}
+
+.am-volume-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  transition: width 0.05s linear;
+}
+
+.am-vol-pct-label {
+  min-width: 34px;
+  text-align: right;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.58);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
 }
 
 /* Right column: LyricsColumn / LyricsHostView */
@@ -534,10 +667,67 @@ html.am-animate-bg .am-mesh-layer {
   position: relative;
 }
 
+/* Apple Music-style floating circular action stack (Romaji + Translate) */
+.am-lyrics-fabs {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.am-fab {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: rgba(255, 255, 255, 0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.14s ease,
+    border-color 0.18s ease;
+}
+
+.am-fab:hover {
+  transform: scale(1.06);
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.am-fab:active {
+  transform: scale(0.94);
+}
+
+.am-fab.active {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.95);
+  color: #1c1c1e;
+}
+
+.am-fab.active:hover {
+  background: #ffffff;
+}
+
+.am-fab svg {
+  width: 21px;
+  height: 21px;
+  fill: currentColor;
+}
+
 .am-lyrics-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 36vh 18px 44vh 8px;
+  padding: 36vh 62px 44vh 8px;
   scroll-behavior: smooth;
   mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 84%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 84%, transparent 100%);
@@ -591,6 +781,9 @@ html.am-animate-bg .am-mesh-layer {
 .am-lyric-line.active {
   filter: blur(0);
   transform: scale(1.03);
+}
+
+.am-lyric-line.active .am-lyric-text {
   color: transparent;
   background-image: linear-gradient(
     90deg,
@@ -602,6 +795,61 @@ html.am-animate-bg .am-mesh-layer {
   -webkit-background-clip: text;
   background-clip: text;
   text-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.am-lyric-romaji {
+  font-size: 0.48em;
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 5px;
+  transition: color 0.3s ease;
+}
+
+.am-lyric-line.active .am-lyric-romaji {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.am-lyric-line.past .am-lyric-romaji {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.am-lyric-line.plain .am-lyric-romaji {
+  font-size: 0.64em;
+  color: rgba(255, 255, 255, 0.64);
+}
+
+html:not(.am-show-romaji) .am-lyric-romaji {
+  display: none;
+}
+
+.am-lyric-translation {
+  font-size: 0.44em;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.38;
+  letter-spacing: 0.005em;
+  color: rgba(255, 255, 255, 0.44);
+  margin-top: 3px;
+  transition: color 0.3s ease;
+}
+
+.am-lyric-line.active .am-lyric-translation {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.am-lyric-line.past .am-lyric-translation {
+  color: rgba(255, 255, 255, 0.26);
+}
+
+.am-lyric-line.plain .am-lyric-translation {
+  font-size: 0.58em;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+html:not(.am-show-translation) .am-lyric-translation {
+  display: none;
 }
 
 .am-lyric-line.plain {
@@ -762,7 +1010,9 @@ html.am-style-spotify .am-artwork-wrap {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
 }
 
-html.am-style-spotify .am-progress-fill {
+html.am-style-spotify .am-progress-fill,
+html.am-style-spotify .am-volume-bar-fill,
+html.am-style-spotify .am-vol-vbar-fill {
   background: #1db954;
 }
 
@@ -806,11 +1056,18 @@ html.am-style-spotify .am-lyric-line.near {
 html.am-style-spotify .am-lyric-line.active {
   filter: none;
   transform: scale(1.015);
+}
+
+html.am-style-spotify .am-lyric-line.active .am-lyric-text {
   color: #ffffff;
   background-image: none;
   -webkit-background-clip: border-box;
   background-clip: border-box;
   text-shadow: none;
+}
+
+html.am-style-spotify .am-lyric-line.active .am-lyric-romaji {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 html.am-style-spotify .am-lyric-line:hover {

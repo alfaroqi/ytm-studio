@@ -9,7 +9,9 @@
   ],
   "host_permissions": [
     "https://music.youtube.com/*",
-    "https://lrclib.net/*"
+    "https://www.youtube.com/*",
+    "https://lrclib.net/*",
+    "https://translate.googleapis.com/*"
   ],
   "declarative_net_request": {
     "rule_resources": [
@@ -21,25 +23,43 @@
     ]
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background/background.js"
   },
   "content_scripts": [
     {
+      "matches": [
+        "https://music.youtube.com/*",
+        "https://www.youtube.com/*"
+      ],
+      "js": ["src/adblock/main.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://music.youtube.com/*",
+        "https://www.youtube.com/*"
+      ],
+      "css": ["src/adblock/adblock.css"],
+      "js": ["src/adblock/content.js"],
+      "run_at": "document_start"
+    },
+    {
       "matches": ["https://music.youtube.com/*"],
-      "js": ["adblock-main.js"],
+      "js": ["src/ytm/bridge-main.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
       "matches": ["https://music.youtube.com/*"],
-      "css": ["styles.css"],
-      "js": ["content.js"],
+      "css": ["src/ytm/styles.css"],
+      "js": ["src/ytm/content.js"],
       "run_at": "document_idle"
     }
   ],
   "action": {
     "default_title": "YTM Studio",
-    "default_popup": "popup.html",
+    "default_popup": "src/popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
