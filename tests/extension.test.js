@@ -31,7 +31,7 @@ test("manifest.json is valid Chrome MV3 without Firefox-only keys", () => {
     fs.readFileSync(path.join(EXT_DIR, "manifest.json"), "utf8")
   );
   assert.equal(manifest.manifest_version, 3);
-  assert.equal(manifest.background.service_worker, "background.js");
+  assert.equal(manifest.background.service_worker, "src/background/background.js");
   assert.equal("scripts" in manifest.background, false);
   assert.equal("browser_specific_settings" in manifest, false);
 
@@ -75,7 +75,7 @@ test("rules/adblock.json has unique positive IDs and valid DNR actions", () => {
 
 test("background.js cleanTitle & cleanArtist normalize YouTube Music metadata", () => {
   const dnrCalls = [];
-  const ctx = loadScriptInSandbox("background.js", {
+  const ctx = loadScriptInSandbox("src/background/background.js", {
     chrome: {
       runtime: { onMessage: { addListener: () => { } } },
       storage: {
@@ -106,7 +106,7 @@ test("background.js cleanTitle & cleanArtist normalize YouTube Music metadata", 
 
 test("background.js fetchFromLrcLib returns exact match and falls back to best search match", async () => {
   let mode = "exact";
-  const ctx = loadScriptInSandbox("background.js", {
+  const ctx = loadScriptInSandbox("src/background/background.js", {
     chrome: {
       runtime: { onMessage: { addListener: () => { } } },
       storage: { local: { get: () => { } }, onChanged: { addListener: () => { } } },
@@ -168,7 +168,7 @@ test("adblock-main.js prunes ad keys from /youtubei/v1/player responses and resp
       ),
   };
 
-  loadScriptInSandbox("adblock-main.js", {
+  loadScriptInSandbox("src/adblock/main.js", {
     window: fakeWindow,
     document: { documentElement: docEl },
   });
@@ -211,7 +211,7 @@ test("adblock-main.js prunes ad keys from XMLHttpRequest /youtubei/v1/player res
   }
 
   const fakeWindow = { XMLHttpRequest: FakeXHR };
-  loadScriptInSandbox("adblock-main.js", {
+  loadScriptInSandbox("src/adblock/main.js", {
     window: fakeWindow,
     document: { documentElement: docEl },
   });
@@ -271,7 +271,7 @@ test("adblock-content.js auto-skips ads on SPA navigation and restores mute/spee
   const winListeners = {};
   let msgListener = null;
 
-  loadScriptInSandbox("adblock-content.js", {
+  loadScriptInSandbox("src/adblock/content.js", {
     window: {
       addEventListener: (type, fn) => {
         winListeners[type] = fn;
@@ -319,7 +319,7 @@ test("adblock-content.js auto-skips ads on SPA navigation and restores mute/spee
   assert.equal(classes.has("am-adblock-enabled"), false);
 });
 
-test("adblock-main.js bridges am-set-volume events to #movie_player and YTM volume slider", () => {
+test("src/ytm/bridge-main.js bridges am-set-volume events to #movie_player and YTM volume slider", () => {
   const listeners = {};
   const playerCalls = [];
   const sliderEvents = [];
@@ -336,7 +336,7 @@ test("adblock-main.js bridges am-set-volume events to #movie_player and YTM volu
     dispatchEvent: (ev) => sliderEvents.push(ev.type),
   };
 
-  loadScriptInSandbox("adblock-main.js", {
+  loadScriptInSandbox("src/ytm/bridge-main.js", {
     window: {
       addEventListener: (type, fn) => {
         listeners[type] = fn;
@@ -370,7 +370,7 @@ test("adblock-main.js bridges am-set-volume events to #movie_player and YTM volu
   assert.deepEqual(playerCalls.slice(5), [["pauseVideo"], ["playVideo"]]);
 });
 
-test("adblock-main.js bridges am-get-track from MediaSession and #movie_player.getVideoData", () => {
+test("src/ytm/bridge-main.js bridges am-get-track from MediaSession and #movie_player.getVideoData", () => {
   const listeners = {};
   const dispatched = [];
   let mediaMeta = {
@@ -387,7 +387,7 @@ test("adblock-main.js bridges am-get-track from MediaSession and #movie_player.g
     }),
   };
 
-  loadScriptInSandbox("adblock-main.js", {
+  loadScriptInSandbox("src/ytm/bridge-main.js", {
     window: {
       addEventListener: (type, fn) => {
         listeners[type] = fn;
@@ -436,7 +436,7 @@ test("adblock-main.js bridges am-get-track from MediaSession and #movie_player.g
 });
 
 test("content.js readCurrentTrack falls back to broader DOM, MediaSession, and MAIN-world bridge", () => {
-  const src = fs.readFileSync(path.join(EXT_DIR, "content.js"), "utf8");
+  const src = fs.readFileSync(path.join(EXT_DIR, "src/ytm/content.js"), "utf8");
   const upgradeMatch = src.match(/function upgradeArtworkUrl[\s\S]*?\n  \}/);
   const videoMatch = src.match(/function getVideo[\s\S]*?\n  \}/);
   const readMatch = src.match(/function readMainWorldTrack[\s\S]*?return \{ title, artist, album, artwork, duration \};\s*\}/);
@@ -518,7 +518,7 @@ test("content.js readCurrentTrack falls back to broader DOM, MediaSession, and M
 
 test("content.js parses synced LRC, multi-timestamps, enhanced word tags, and upgrades artwork", () => {
   // Extract pure helper functions from content.js into an isolated VM context
-  const src = fs.readFileSync(path.join(EXT_DIR, "content.js"), "utf8");
+  const src = fs.readFileSync(path.join(EXT_DIR, "src/ytm/content.js"), "utf8");
   const fnMatch = src.match(/function formatTime[\s\S]*?return result;\s*\}/);
   assert.ok(fnMatch, "Could not locate helper functions in content.js");
 
@@ -558,7 +558,7 @@ test("content.js parses synced LRC, multi-timestamps, enhanced word tags, and up
 // ============================================================================
 
 test("background.js detects JP/KR/CN languages and romanizes Kana & Hangul locally", () => {
-  const ctx = loadScriptInSandbox("background.js", {
+  const ctx = loadScriptInSandbox("src/background/background.js", {
     chrome: {
       runtime: { onMessage: { addListener: () => { } } },
       storage: { local: { get: () => { } }, onChanged: { addListener: () => { } } },
@@ -587,7 +587,7 @@ test("background.js detects JP/KR/CN languages and romanizes Kana & Hangul local
 test("background.js romanizeLines batches online requests, skips English, deduplicates, and falls back offline", async () => {
   let fetchCalls = 0;
   let online = true;
-  const ctx = loadScriptInSandbox("background.js", {
+  const ctx = loadScriptInSandbox("src/background/background.js", {
     chrome: {
       runtime: { onMessage: { addListener: () => { } } },
       storage: { local: { get: () => { } }, onChanged: { addListener: () => { } } },
@@ -641,7 +641,7 @@ test("background.js romanizeLines batches online requests, skips English, dedupl
 
 test("background.js translateLines batches English translations, deduplicates, caches, and skips unchanged lines", async () => {
   let fetchCalls = 0;
-  const ctx = loadScriptInSandbox("background.js", {
+  const ctx = loadScriptInSandbox("src/background/background.js", {
     chrome: {
       runtime: { onMessage: { addListener: () => { } } },
       storage: { local: { get: () => { } }, onChanged: { addListener: () => { } } },
