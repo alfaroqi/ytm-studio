@@ -36,9 +36,12 @@
       "world": "MAIN"
     },
     {
-      "matches": ["https://www.youtube.com/*"],
-      "css": ["adblock-yt.css"],
-      "js": ["adblock-yt.js"],
+      "matches": [
+        "https://music.youtube.com/*",
+        "https://www.youtube.com/*"
+      ],
+      "css": ["adblock.css"],
+      "js": ["adblock-content.js"],
       "run_at": "document_start"
     },
     {

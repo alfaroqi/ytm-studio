@@ -242,7 +242,7 @@ test("adblock-main.js prunes ad keys from XMLHttpRequest /youtubei/v1/player res
   assert.ok(Array.isArray(unpruned[0].playerResponse.adPlacements));
 });
 
-test("adblock-yt.js auto-skips ads on www.youtube.com SPA navigation and restores mute/speed", () => {
+test("adblock-content.js auto-skips ads on SPA navigation and restores mute/speed", () => {
   const classes = new Set();
   const docEl = {
     dataset: {},
@@ -271,7 +271,7 @@ test("adblock-yt.js auto-skips ads on www.youtube.com SPA navigation and restore
   const winListeners = {};
   let msgListener = null;
 
-  loadScriptInSandbox("adblock-yt.js", {
+  loadScriptInSandbox("adblock-content.js", {
     window: {
       addEventListener: (type, fn) => {
         winListeners[type] = fn;

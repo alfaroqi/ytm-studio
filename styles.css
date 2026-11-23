@@ -130,24 +130,6 @@ html.am-theme-enabled ytmusic-player-page > * {
   z-index: 1;
 }
 
-/* ==========================================================================
-   Cosmetic Ad & Promo Hiding (when Adblock is enabled)
-   ========================================================================== */
-
-html.am-adblock-enabled ytmusic-mealbar-promo-renderer,
-html.am-adblock-enabled ytmusic-statement-banner-renderer,
-html.am-adblock-enabled ytmusic-banner-promo-renderer,
-html.am-adblock-enabled ytmusic-promoted-sparkles-web-renderer,
-html.am-adblock-enabled ytd-ad-slot-renderer,
-html.am-adblock-enabled .ytp-ad-module,
-html.am-adblock-enabled .ytp-ad-overlay-container,
-html.am-adblock-enabled .ytp-ad-player-overlay,
-html.am-adblock-enabled .ytp-ad-image-overlay,
-html.am-adblock-enabled tp-yt-paper-dialog:has(ytmusic-mealbar-promo-renderer),
-html.am-adblock-enabled #player-ads {
-  display: none !important;
-}
-
 /* Lyrics toggle button injected into YTM Transport Bar */
 #am-lyrics-toggle-btn {
   display: inline-flex;

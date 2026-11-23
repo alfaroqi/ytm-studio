@@ -10,7 +10,6 @@
       showLyricsBtn: true,
       showRomaji: true,
       showTranslation: false,
-      adblockEnabled: true,
     },
     overlayOpen: false,
     currentTrackKey: "",
@@ -32,7 +31,6 @@
     lastTrackSwitchAt: 0,
     pendingPauseUntil: 0,
     rafId: null,
-    wasMutedBeforeAd: null,
   };
 
   const CJK_REGEX =
@@ -225,8 +223,6 @@
     document.documentElement.classList.toggle("am-animate-bg", !!state.settings.animateBg);
     document.documentElement.classList.toggle("am-show-romaji", !!state.settings.showRomaji);
     document.documentElement.classList.toggle("am-show-translation", !!state.settings.showTranslation);
-    document.documentElement.classList.toggle("am-adblock-enabled", !!state.settings.adblockEnabled);
-    document.documentElement.dataset.amAdblock = state.settings.adblockEnabled ? "true" : "false";
     const btn = document.getElementById("am-lyrics-toggle-btn");
     if (btn) {
       btn.style.display = state.settings.showLyricsBtn ? "inline-flex" : "none";
@@ -315,7 +311,6 @@
           showLyricsBtn: true,
           showRomaji: true,
           showTranslation: false,
-          adblockEnabled: true,
         },
         (items) => {
           state.settings = { ...state.settings, ...items };
@@ -324,48 +319,6 @@
       );
     } catch (_) {
       applySettings();
-    }
-  }
-
-  // --- Fallback Ad Auto-Skipper (for any server-side ad that bypasses network/JSON pruning) ---
-  function handleAdPlayback() {
-    if (!state.settings.adblockEnabled) return;
-
-    const player = document.querySelector("#movie_player");
-    const video = getVideo();
-    const isAd =
-      !!(player && (player.classList.contains("ad-showing") || player.classList.contains("ad-interrupting"))) ||
-      !!document.querySelector(".ytp-ad-player-overlay, .ytp-ad-player-overlay-layout");
-
-    if (isAd && video) {
-      if (state.wasMutedBeforeAd === null) {
-        state.wasMutedBeforeAd = video.muted;
-      }
-      video.muted = true;
-      if (Number.isFinite(video.duration) && video.duration > 0) {
-        video.currentTime = video.duration;
-      }
-      video.playbackRate = 16;
-
-      // Click any available skip button immediately
-      const skipSelectors = [
-        ".ytp-skip-ad-button",
-        ".ytp-ad-skip-button",
-        ".ytp-ad-skip-button-modern",
-        "button.ytp-ad-skip-button-modern",
-      ];
-      for (const sel of skipSelectors) {
-        const skipBtn = document.querySelector(sel);
-        if (skipBtn) {
-          skipBtn.click();
-          break;
-        }
-      }
-    } else if (!isAd && video && state.wasMutedBeforeAd !== null) {
-      // Restore original mute state and playback speed once the song resumes
-      video.muted = state.wasMutedBeforeAd;
-      if (video.playbackRate > 4) video.playbackRate = 1;
-      state.wasMutedBeforeAd = null;
     }
   }
 
@@ -1312,6 +1265,5 @@
   loadSettings();
   createOverlay();
   setInterval(checkTrackChange, 1000);
-  setInterval(handleAdPlayback, 250);
   startSyncLoop();
 })();
